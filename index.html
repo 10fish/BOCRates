@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>中国银行远期结售汇牌价走势图</title>
+</head>
+<body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.6.0/Chart.bundle.min.js"></script>
+<script src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-3.2.1.min.js"></script>
+<script src="http://underscorejs.org/underscore-min.js"></script>
+<canvas id="myChart" width="1000" height="600" style="max-width: 80%;margin-left: 10%;max-height: 600px;"></canvas>
+<script>
+    var ctx = document.getElementById("myChart").getContext('2d');
+    $.ajax({
+        url: "http://localhost:8080/rates",
+        success: function(result) {
+            var splits = _.filter(result.split("\n"), function (s) {
+                return s !== "";
+            });
+            splits = _.last(splits, 360);
+            var records = _.sortBy(_.uniq(splits), function (s) {
+                var d = s.split(",")[4];
+                var fields = d.split("-");
+                return parseInt(fields[0])*365 + parseInt(fields[1])*30 + parseInt(fields[2]);
+            });
+            var labels = [];
+            var values = [];
+            records.forEach(function (t) {
+                if(t !== "") {
+                    labels.push(t.split(",")[4]);
+                    values.push(parseFloat(t.split(",")[3]));
+                }
+            });
+            var myChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: '中国银行远期结售汇牌价',
+                        data: values,
+                        borderColor: "#077",
+                        pointBackgroundColor: "#369",
+                        showLine: true,
+                        spanGaps: true,
+                        fill: false,
+                        pointRadius: 2,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    scales: {
+                        yAxes: [{
+                            ticks: {
+                            }
+                        }]
+                    }
+                }
+            });
+        }
+    });
+</script>
+</body>
+</html>
